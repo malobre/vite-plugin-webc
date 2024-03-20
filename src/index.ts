@@ -1,9 +1,6 @@
 import { join } from "path";
 import { WebC } from "@11ty/webc";
-import {
-  type Plugin as VitePlugin,
-  type ResolvedConfig as ViteConfig,
-} from "vite";
+import type { Plugin as VitePlugin, ResolvedConfig as ViteConfig } from "vite";
 
 type Config = {
   components?:
