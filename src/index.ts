@@ -1,5 +1,6 @@
 import { join, relative } from "node:path";
 import { WebC } from "@11ty/webc";
+import type { PluginContext as RollupPluginContext } from "rollup";
 import { normalizePath } from "vite";
 import type { Plugin as VitePlugin, ResolvedConfig as ViteConfig } from "vite";
 
@@ -19,15 +20,38 @@ type Config = {
 };
 
 export default (config: Config = {}): VitePlugin => {
+  let rollupContext: RollupPluginContext;
   let viteConfig: ViteConfig;
 
   const dependenciesMap = new Map<string, string[]>();
+  const dirty: string[] = [];
 
   return {
     name: "@malobre/vite-plugin-webc",
     enforce: "pre",
+    buildStart() {
+      rollupContext = this;
+    },
     configResolved(resolved) {
       viteConfig = resolved;
+    },
+    watchChange(id, _change) {
+      for (const [index, dependencies] of dependenciesMap) {
+        if (dependencies.includes(id)) {
+          dirty.push(index);
+          break;
+        }
+      }
+    },
+    shouldTransformCachedModule(options) {
+      const index = dirty.findIndex((id) => id === options.id);
+
+      if (index >= 0) {
+        dirty.splice(index, 1);
+        return true;
+      }
+
+      return false;
     },
     handleHotUpdate(ctx) {
       for (const [index, dependencies] of dependenciesMap) {
@@ -62,6 +86,12 @@ export default (config: Config = {}): VitePlugin => {
         }
 
         const { html, components } = await webc.compile();
+
+        for (const component of components) {
+          if (component.endsWith(dummyIndexFilename)) continue;
+
+          rollupContext?.addWatchFile(component);
+        }
 
         dependenciesMap.set(ctx.filename, components);
 
