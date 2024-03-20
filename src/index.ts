@@ -2,6 +2,8 @@ import { join } from "node:path";
 import { WebC } from "@11ty/webc";
 import type { Plugin as VitePlugin, ResolvedConfig as ViteConfig } from "vite";
 
+const dummyIndexFilename = "index.html?vite-plugin-webc-dummy";
+
 type Config = {
   components?:
     | string // Glob
@@ -30,7 +32,7 @@ export default (config: Config = {}): VitePlugin => {
         const webc = new WebC();
 
         // Resolve path relative to vite project root.
-        webc.setContent(raw, join(viteConfig.root, "dummy.html"));
+        webc.setContent(raw, join(viteConfig.root, dummyIndexFilename));
 
         if (config.components !== undefined) {
           webc.defineComponents(config.components);
