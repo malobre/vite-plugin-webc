@@ -1,4 +1,4 @@
-import { join } from "path";
+import { join } from "node:path";
 import { WebC } from "@11ty/webc";
 import type { Plugin as VitePlugin, ResolvedConfig as ViteConfig } from "vite";
 
