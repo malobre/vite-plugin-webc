@@ -1,5 +1,5 @@
-import { WebC } from "@11ty/webc";
 import { join } from "path";
+import { WebC } from "@11ty/webc";
 import {
   type Plugin as VitePlugin,
   type ResolvedConfig as ViteConfig,
