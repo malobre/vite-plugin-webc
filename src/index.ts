@@ -1,5 +1,6 @@
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { WebC } from "@11ty/webc";
+import { normalizePath } from "vite";
 import type { Plugin as VitePlugin, ResolvedConfig as ViteConfig } from "vite";
 
 const dummyIndexFilename = "index.html?vite-plugin-webc-dummy";
@@ -20,15 +21,29 @@ type Config = {
 export default (config: Config = {}): VitePlugin => {
   let viteConfig: ViteConfig;
 
+  const dependenciesMap = new Map<string, string[]>();
+
   return {
     name: "@malobre/vite-plugin-webc",
     enforce: "pre",
     configResolved(resolved) {
       viteConfig = resolved;
     },
+    handleHotUpdate(ctx) {
+      for (const [index, dependencies] of dependenciesMap) {
+        if (dependencies.includes(ctx.file)) {
+          ctx.server.ws.send({
+            type: "full-reload",
+            path: `/${normalizePath(relative(viteConfig.root, index))}`,
+          });
+
+          break;
+        }
+      }
+    },
     transformIndexHtml: {
       order: "pre",
-      handler: async (raw) => {
+      handler: async (raw, ctx) => {
         const webc = new WebC();
 
         // Resolve path relative to vite project root.
@@ -46,7 +61,9 @@ export default (config: Config = {}): VitePlugin => {
           webc.setHelper(...helper);
         }
 
-        const { html } = await webc.compile();
+        const { html, components } = await webc.compile();
+
+        dependenciesMap.set(ctx.filename, components);
 
         return html;
       },
