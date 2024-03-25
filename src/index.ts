@@ -39,7 +39,6 @@ export default (config: Config = {}): VitePlugin => {
       for (const [index, dependencies] of dependenciesMap) {
         if (dependencies.includes(id)) {
           dirty.push(index);
-          break;
         }
       }
     },
