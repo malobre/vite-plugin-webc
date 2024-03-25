@@ -62,8 +62,11 @@ export default (config: Config = {}): VitePlugin => {
       handler: async (raw, ctx) => {
         const webc = new WebC();
 
-        // Resolve path relative to vite project root.
-        webc.setContent(raw, join(viteConfig.root, dummyIndexFilename));
+        webc.setContent(
+          raw,
+          // Resolve path relative to vite project root.
+          join(viteConfig.root, dummyIndexFilename),
+        );
 
         if (config.components !== undefined) {
           webc.defineComponents(config.components);
