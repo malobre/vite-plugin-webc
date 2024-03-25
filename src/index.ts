@@ -24,7 +24,7 @@ export default (config: Config = {}): VitePlugin => {
   let viteConfig: ViteConfig;
 
   const dependenciesMap = new Map<string, string[]>();
-  const dirty: string[] = [];
+  const dirty: Set<string> = new Set();
 
   return {
     name: "@malobre/vite-plugin-webc",
@@ -38,19 +38,12 @@ export default (config: Config = {}): VitePlugin => {
     watchChange(id, _change) {
       for (const [index, dependencies] of dependenciesMap) {
         if (dependencies.includes(id)) {
-          dirty.push(index);
+          dirty.add(index);
         }
       }
     },
     shouldTransformCachedModule(options) {
-      const index = dirty.findIndex((id) => id === options.id);
-
-      if (index >= 0) {
-        dirty.splice(index, 1);
-        return true;
-      }
-
-      return false;
+      return dirty.delete(options.id);
     },
     handleHotUpdate(ctx) {
       for (const [index, dependencies] of dependenciesMap) {
